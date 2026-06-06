@@ -3,7 +3,8 @@ import { useNavigate, Link } from "react-router-dom";
 import { Mail, Lock, User, Eye, EyeOff, ShieldCheck } from "lucide-react";
 import { AuthContext } from "../context/AuthContext";
 
-const API = "http://localhost:5000";
+const API =
+  process.env.REACT_APP_API_URL 
 
 /* ─── OTP Input component ──────────────────────────────────────────────── */
 const OTPInput = ({ otp, setOtp }) => {
