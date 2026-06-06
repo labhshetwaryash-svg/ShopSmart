@@ -206,6 +206,7 @@ const Results = () => {
   const [searchInput, setSearchInput] = useState('');
 
   const query = searchParams.get('query') || '';
+  const API_URL = process.env.REACT_APP_API_URL;
 
   useEffect(() => {
     setSearchInput(query);
@@ -220,7 +221,9 @@ const Results = () => {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch(`/search?query=${encodeURIComponent(query)}`);
+      const res = await fetch(
+        `${API_URL}/search?query=${encodeURIComponent(query)}`
+      );
       if (!res.ok) throw new Error('No products found for this search.');
       const data = await res.json();
       setProducts(data.results || []);
@@ -234,7 +237,7 @@ const Results = () => {
 
   const fetchSavedProducts = async () => {
     try {
-      const res = await fetch('/products/saved', { headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetch(`${API_URL}/products/saved`, { headers: { Authorization: `Bearer ${token}` } });
       if (res.ok) {
         const data = await res.json();
         setSavedProducts(data.map((p) => p.productId));
@@ -247,13 +250,13 @@ const Results = () => {
     const isSaved = savedProducts.includes(product.id);
     try {
       if (isSaved) {
-        const res = await fetch(`/products/saved/${product.id}`, {
+        const res = await fetch(`${API_URL}/products/saved/${product.id}`, {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${token}` },
         });
         if (res.ok) setSavedProducts((prev) => prev.filter((id) => id !== product.id));
       } else {
-        const res = await fetch('/products/save', {
+        const res = await fetch(`${API_URL}/products/save`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
           body: JSON.stringify({
