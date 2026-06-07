@@ -42,7 +42,10 @@ router.post('/send-otp', async (req, res) => {
     otpStore.set(email, { otp, name, password, confirmPassword, expiresAt });
 
     // Send OTP email
-    await sendOTPEmail(email, name, otp);
+    // Temporary OTP for testing
+console.log("================================");
+console.log(`OTP for ${email}: ${otp}`);
+console.log("================================");
 
     res.status(200).json({ message: 'OTP sent to your email. Please verify to complete signup.' });
   } catch (error) {
