@@ -3,7 +3,7 @@ import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, PieChart, Pie, Cell, Legend } from 'recharts';
 import { AuthContext } from '../context/AuthContext';
 
-const API = 'http://localhost:5000';
+const API = process.env.REACT_APP_API_URL;
 
 /* ─── Set Price Alert Modal ───────────────────────────────────────────── */
 const PriceAlertModal = ({ product, store, onClose, token, userName }) => {
@@ -146,8 +146,8 @@ const ProductDetails = () => {
         setLoading(true);
         // Fetch price history filtered by store
         const url = storeName
-          ? `/price-history/${encodeURIComponent(productId)}?store=${encodeURIComponent(storeName)}`
-          : `/price-history/${encodeURIComponent(productId)}`;
+          ? `${API}/price-history/${encodeURIComponent(productId)}?store=${encodeURIComponent(storeName)}`
+          : `${API}/price-history/${encodeURIComponent(productId)}`;
 
         const historyRes = await fetch(url);
         const historyData = historyRes.ok ? await historyRes.json() : { history: [], analysis: null };
@@ -715,7 +715,6 @@ const ProductDetails = () => {
                       {reviews?.ratings && reviews?.ratings.length > 0 && (
                         <div className="space-y-2 mt-4 max-w-md">
                           {(() => {
-                            // Calculate total to check if 'amount' are counts or percentages
                             const totalAmount = reviews?.ratings.reduce((acc, r) => {
                               const val = typeof r.amount === 'string' ? parseFloat(r.amount.replace(/[^0-9.]/g, '')) : r.amount;
                               return acc + (val || 0);
@@ -723,8 +722,6 @@ const ProductDetails = () => {
 
                             return reviews?.ratings.map((r) => {
                               const amountVal = typeof r.amount === 'string' ? parseFloat(r.amount.replace(/[^0-9.]/g, '')) : r.amount;
-                              // If total > 110, we assume these are counts and normalize to 100%
-                              // Otherwise we assume they are already percentages
                               const percentage = totalAmount > 110 
                                 ? (amountVal / totalAmount) * 100 
                                 : Math.min(100, amountVal || 0);
@@ -868,7 +865,6 @@ const ProductDetails = () => {
                     <div className="mb-4">
                       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
                         <h4 className="font-semibold text-gray-800">Review Sentiment Analysis</h4>
-                        {/* Sentiment Summary Badges */}
                         {reviews?.user_reviews?.some(r => r.sentiment) && (
                           <div className="flex flex-wrap items-center gap-2">
                             {['positive', 'neutral', 'negative'].map(label => {
@@ -912,7 +908,6 @@ const ProductDetails = () => {
                                   paddingAngle={5}
                                   dataKey="value"
                                 >
-                                  {/* Map colors dynamically based on sentiment name */}
                                   {[
                                     { name: 'Positive', color: '#10B981' },
                                     { name: 'Neutral', color: '#9CA3AF' },
@@ -969,7 +964,6 @@ const ProductDetails = () => {
                             </div>
                             <p className="text-gray-700 text-sm leading-relaxed">{review.text}</p>
 
-                            {/* Review Images */}
                             {review.images && review.images.length > 0 && (
                               <div className="flex gap-2 mt-3 overflow-x-auto pb-1">
                                 {review.images.slice(0, 4).map((img, imgIdx) => (
