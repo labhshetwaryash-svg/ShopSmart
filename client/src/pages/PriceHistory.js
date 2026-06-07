@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
+const API = process.env.REACT_APP_API_URL;
+
 const PriceHistory = () => {
     const [searchParams] = useSearchParams();
     const [historyData, setHistoryData] = useState(null);
@@ -46,7 +48,7 @@ const PriceHistory = () => {
 
     const fetchCategories = async () => {
         try {
-            const response = await fetch('http://localhost:5000/price-history/categories/list');
+            const response = await fetch(`${API}/price-history/categories/list`);
             if (response.ok) {
                 const data = await response.json();
                 setCategories(data.categories || []);
@@ -58,7 +60,7 @@ const PriceHistory = () => {
 
     const fetchAllProducts = async () => {
         try {
-            const response = await fetch('http://localhost:5000/price-history');
+            const response = await fetch(`${API}/price-history`);
             if (response.ok) {
                 const data = await response.json();
                 setAllProducts(data.products || []);
@@ -71,7 +73,7 @@ const PriceHistory = () => {
 
     const fetchProductsByCategory = async (category) => {
         try {
-            const response = await fetch(`http://localhost:5000/price-history?category=${encodeURIComponent(category)}`);
+            const response = await fetch(`${API}/price-history?category=${encodeURIComponent(category)}`);
             if (response.ok) {
                 const data = await response.json();
                 setAllProducts(data.products || []);
@@ -85,7 +87,7 @@ const PriceHistory = () => {
         try {
             setLoading(true);
             setError(null);
-            const response = await fetch(`http://localhost:5000/price-history/${encodeURIComponent(product)}`);
+            const response = await fetch(`${API}/price-history/${encodeURIComponent(product)}`);
 
             const data = await response.json();
             console.log('Price history data:', data);
@@ -116,7 +118,7 @@ const PriceHistory = () => {
     const fetchProductReviews = async (query) => {
         try {
             setReviewsLoading(true);
-            const response = await fetch(`http://localhost:5000/reviews?q=${encodeURIComponent(query)}`);
+            const response = await fetch(`${API}/reviews?q=${encodeURIComponent(query)}`);
             if (response.ok) {
                 const data = await response.json();
                 setProductReviews(data);
