@@ -166,10 +166,23 @@ router.post('/login', async (req, res) => {
 // ─── Get current user ──────────────────────────────────────────────────────────
 router.get('/me', auth, async (req, res) => {
   try {
+    console.log('===================');
+    console.log('ME ROUTE HIT');
+    console.log('USER ID:', req.userId);
+
     const user = await User.findById(req.userId).select('-password');
+
+    console.log('USER FOUND:', user);
+    console.log('===================');
+
     res.json(user);
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    console.error('ME ROUTE ERROR:', error);
+
+    res.status(500).json({
+      message: 'Server error',
+      error: error.message
+    });
   }
 });
 
