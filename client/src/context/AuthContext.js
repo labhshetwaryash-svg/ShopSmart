@@ -17,11 +17,13 @@ export const AuthProvider = ({ children }) => {
 
   const fetchUser = async () => {
     try {
-      const response = await fetch('http://localhost:5000/auth/me', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+     const API_URL = process.env.REACT_APP_API_URL;
+
+const response = await fetch(`${API_URL}/auth/me`, {
+  headers: {
+    Authorization: `Bearer ${token}`,
+  },
+});
       if (response.ok) {
         const userData = await response.json();
         setUser(userData);
