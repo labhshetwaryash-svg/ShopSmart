@@ -19,11 +19,13 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const response = await fetch('/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
+const API_URL = process.env.REACT_APP_API_URL;
+
+const response = await fetch(`${API_URL}/auth/login`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ email, password }),
+});
 
       const data = await response.json();
 
