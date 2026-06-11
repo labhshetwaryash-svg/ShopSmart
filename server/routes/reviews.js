@@ -114,14 +114,18 @@ router.get('/', async (req, res) => {
       productData.user_reviews = analyzedReviews;
     }
 
+    console.log('Sentiment finished');
+
     // ── STEP 4: Research AI Features (all synchronous — runs in milliseconds) ──
 
     // 1. Store Disparity
     productData.store_disparity = analyzeStoreDisparity(productData.user_reviews);
+    console.log('Store disparity finished');
 
     // 2. Price Integrity
     const history = historyResult.success ? historyResult.data : [];
     productData.price_integrity = analyzePriceIntegrity(history);
+    console.log('Price integrity finished');
 
     // 3. XAI Recommendation
     if (historyResult.success) {
@@ -131,18 +135,22 @@ router.get('/', async (req, res) => {
         productData.store_disparity
       );
     }
+    console.log('AI recommendation finished');
 
     // 4. Aspect-Based Sentiment Analysis (ABSA)
     productData.aspect_sentiment = analyzeAspects(productData.user_reviews);
+    console.log('ABSA finished');
 
     // 5. Review Credibility
     productData.review_credibility = analyzeReviewCredibility(productData.user_reviews);
+    console.log('Credibility finished');
 
     // 6. Value-for-Money Index
     const currentPrice =
       shoppingResults.find((r) => r.product_id === product_id)?.extracted_price ||
       (shoppingResults.length > 0 ? shoppingResults[0].extracted_price : 0);
     productData.vfm_index = calculateVFMIndex(currentPrice, shoppingResults);
+    console.log('VFM finished');
 
     console.log('STEP 5: Sending response');
     res.json(productData);
