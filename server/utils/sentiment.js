@@ -1,19 +1,37 @@
 const { pipeline } = require('@xenova/transformers');
 
-let sentimenlet sentimentPipeline = null;
-let pipelinePromise = null;tPipeline = null;
+let sentimentPipeline = null;
+let pipelinePromise = null;
 
 /**
  * Get or initialize the sentiment analysis pipeline.
+ * Uses a promise cache to prevent multiple simultaneous initializations.
  */
 async function getPipeline() {
-  if (!sentimentPipeline) {
-    console.log('Initializing sentiment analysis pipeline...');
-    // Using Xenova/bert-base-multilingual-uncased-sentiment for Transformers.js compatibility
-    sentimentPipeline = await pipeline('sentiment-analysis', 'Xenova/bert-base-multilingual-uncased-sentiment');
-    console.log('Sentiment analysis pipeline initialized.');
+  if (sentimentPipeline) {
+    return sentimentPipeline;
   }
-  return sentimentPipeline;
+
+  if (!pipelinePromise) {
+    console.log('Initializing sentiment analysis pipeline...');
+
+    pipelinePromise = pipeline(
+      'sentiment-analysis',
+      'Xenova/bert-base-multilingual-uncased-sentiment'
+    )
+      .then((p) => {
+        sentimentPipeline = p;
+        console.log('Sentiment analysis pipeline initialized.');
+        return p;
+      })
+      .catch((err) => {
+        // Reset so next call can retry
+        pipelinePromise = null;
+        throw err;
+      });
+  }
+
+  return pipelinePromise;
 }
 
 /**
@@ -29,11 +47,11 @@ async function analyzeSentiment(text) {
 
     const classifier = await getPipeline();
     const result = await classifier(text.substring(0, 512));
-    
+
     const sentiment = result[0];
-    // nlptown/bert-base-multilingual-uncased-sentiment labels are '1 star', '2 stars', etc.
+    // Xenova/bert-base-multilingual-uncased-sentiment labels are '1 star', '2 stars', etc.
     const stars = parseInt(sentiment.label[0]);
-    
+
     let label = 'neutral';
     if (stars <= 2) label = 'negative';
     else if (stars >= 4) label = 'positive';
@@ -41,7 +59,7 @@ async function analyzeSentiment(text) {
     return {
       label,
       score: sentiment.score,
-      stars
+      stars,
     };
   } catch (error) {
     console.error('Sentiment analysis error:', error);
@@ -57,7 +75,7 @@ async function analyzeSentiment(text) {
 async function analyzeReviews(reviews) {
   if (!reviews || !Array.isArray(reviews)) return reviews;
 
-  // Process in parallel with a limit to avoid overloading
+  // Process all reviews in parallel
   const processedReviews = await Promise.all(
     reviews.map(async (review) => {
       if (review.text) {
@@ -73,5 +91,5 @@ async function analyzeReviews(reviews) {
 
 module.exports = {
   analyzeSentiment,
-  analyzeReviews
+  analyzeReviews,
 };
