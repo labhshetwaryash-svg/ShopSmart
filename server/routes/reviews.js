@@ -6,6 +6,9 @@ const { analyzePriceIntegrity, analyzeStoreDisparity, generateAIRecommendation, 
 
 const router = express.Router();
 
+// Timeout for all SerpAPI requests (10 seconds)
+const SERP_TIMEOUT = 10000;
+
 router.get('/', async (req, res) => {
   try {
     const { product_id, q } = req.query;
@@ -16,7 +19,9 @@ router.get('/', async (req, res) => {
 
     const searchQuery = q || product_id;
 
-    // Step 1: Search google_shopping to find the immersive_product_page_token
+    // ── STEP 1: Search google_shopping to find the immersive_product_page_token ──
+    console.log('STEP 1: Starting reviews request for query:', searchQuery);
+
     const searchParams = {
       engine: 'google_shopping',
       q: searchQuery,
@@ -25,7 +30,13 @@ router.get('/', async (req, res) => {
       api_key: process.env.SERP_API_KEY,
     };
 
-    const searchResponse = await axios.get('https://serpapi.com/search', { params: searchParams });
+    const searchResponse = await axios.get('https://serpapi.com/search', {
+      params: searchParams,
+      timeout: SERP_TIMEOUT,
+    });
+
+    console.log('STEP 2: Search completed');
+
     const shoppingResults = searchResponse.data.shopping_results || [];
 
     let pageToken = null;
@@ -47,7 +58,9 @@ router.get('/', async (req, res) => {
       return res.status(404).json({ message: 'No product found' });
     }
 
-    // Step 2: Fetch detailed product data using google_immersive_product
+    // ── STEP 2: Fetch detailed product data using google_immersive_product ──
+    console.log('STEP 3: Fetching immersive product data');
+
     const immersiveParams = {
       engine: 'google_immersive_product',
       page_token: pageToken,
@@ -56,25 +69,44 @@ router.get('/', async (req, res) => {
       api_key: process.env.SERP_API_KEY,
     };
 
-    const immersiveResponse = await axios.get('https://serpapi.com/search', { params: immersiveParams });
+    const immersiveResponse = await axios.get('https://serpapi.com/search', {
+      params: immersiveParams,
+      timeout: SERP_TIMEOUT,
+    });
+
     const productData = immersiveResponse.data.product_results;
 
     if (!productData) {
       return res.status(404).json({ message: 'No product data found' });
     }
 
-    // Step 3: Perform sentiment analysis on user reviews if they exist
-    if (productData.user_reviews && productData.user_reviews.length > 0) {
+    // ── STEP 3: Run analyzeReviews and getProductHistory in parallel ──
+    console.log('STEP 4: Running ABSA and parallel tasks');
+
+    const hasReviews = productData.user_reviews && productData.user_reviews.length > 0;
+
+    if (hasReviews) {
       console.log(`Analyzing sentiment for ${productData.user_reviews.length} reviews...`);
-      productData.user_reviews = await analyzeReviews(productData.user_reviews);
     }
 
-    // Step 4: Research AI Features
+    // analyzeReviews and getProductHistory are independent — run them together
+    const [analyzedReviews, historyResult] = await Promise.all([
+      hasReviews
+        ? analyzeReviews(productData.user_reviews)
+        : Promise.resolve([]),
+      Promise.resolve(getProductHistory(productData.title || searchQuery)),
+    ]);
+
+    if (hasReviews) {
+      productData.user_reviews = analyzedReviews;
+    }
+
+    // ── STEP 4: Research AI Features (all synchronous — runs in milliseconds) ──
+
     // 1. Store Disparity
     productData.store_disparity = analyzeStoreDisparity(productData.user_reviews);
 
     // 2. Price Integrity
-    const historyResult = getProductHistory(productData.title || searchQuery);
     const history = historyResult.success ? historyResult.data : [];
     productData.price_integrity = analyzePriceIntegrity(history);
 
@@ -94,12 +126,21 @@ router.get('/', async (req, res) => {
     productData.review_credibility = analyzeReviewCredibility(productData.user_reviews);
 
     // 6. Value-for-Money Index
-    const currentPrice = shoppingResults.find(r => r.product_id === product_id)?.extracted_price || 
-                        (shoppingResults.length > 0 ? shoppingResults[0].extracted_price : 0);
+    const currentPrice =
+      shoppingResults.find((r) => r.product_id === product_id)?.extracted_price ||
+      (shoppingResults.length > 0 ? shoppingResults[0].extracted_price : 0);
     productData.vfm_index = calculateVFMIndex(currentPrice, shoppingResults);
 
+    console.log('STEP 5: Sending response');
     res.json(productData);
+
   } catch (error) {
+    // Distinguish timeout errors from other failures for clearer Render logs
+    if (error.code === 'ECONNABORTED') {
+      console.error('Reviews fetch error: SerpAPI request timed out after', SERP_TIMEOUT, 'ms');
+      return res.status(504).json({ message: 'SerpAPI request timed out', error: 'TIMEOUT' });
+    }
+
     console.error('Reviews fetch error:', error.message);
     res.status(500).json({ message: 'Failed to fetch reviews', error: error.message });
   }
