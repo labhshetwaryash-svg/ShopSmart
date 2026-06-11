@@ -39,12 +39,25 @@ router.get('/', async (req, res) => {
 
     const shoppingResults = searchResponse.data.shopping_results || [];
 
+    // Debug: log how many results came back and the first product ID
+    console.log('Shopping Results Count:', shoppingResults.length);
+    if (shoppingResults.length > 0) {
+      console.log('First Result Product ID:', shoppingResults[0].product_id);
+    }
+
     let pageToken = null;
 
     if (product_id) {
-      // Find the exact product by product_id
-      const match = shoppingResults.find((r) => r.product_id === product_id);
-      if (match && match.immersive_product_page_token) {
+      // Match safely even if one is a string and the other is a number
+      const match = shoppingResults.find(
+        (r) => String(r.product_id) === String(product_id)
+      );
+
+      console.log('Requested Product ID:', product_id);
+      console.log('Matched Product:', match?.title);
+      console.log('Page Token Found:', !!match?.immersive_product_page_token);
+
+      if (match?.immersive_product_page_token) {
         pageToken = match.immersive_product_page_token;
       }
     }
