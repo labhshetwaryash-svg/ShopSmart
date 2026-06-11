@@ -69,24 +69,14 @@ async function analyzeSentiment(text) {
 
 /**
  * Analyzes a batch of reviews.
+ * SENTIMENT DISABLED FOR TEST — returns reviews as-is to isolate timeout cause.
+ * Re-enable by restoring the Promise.all block below.
  * @param {Array} reviews - Array of review objects.
- * @returns {Promise<Array>} - Reviews with sentiment added.
+ * @returns {Promise<Array>} - Reviews unchanged.
  */
 async function analyzeReviews(reviews) {
-  if (!reviews || !Array.isArray(reviews)) return reviews;
-
-  // Process all reviews in parallel
-  const processedReviews = await Promise.all(
-    reviews.map(async (review) => {
-      if (review.text) {
-        const sentiment = await analyzeSentiment(review.text);
-        return { ...review, sentiment };
-      }
-      return review;
-    })
-  );
-
-  return processedReviews;
+  console.log('SENTIMENT DISABLED FOR TEST');
+  return reviews;
 }
 
 module.exports = {
