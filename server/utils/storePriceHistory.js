@@ -95,7 +95,13 @@ const logProductPriceToStore = async (product, query) => {
     if (workbook.SheetNames.length > 0) {
       workbook.Sheets[workbook.SheetNames[0]] = newWorksheet;
     } else {
-      XLSX.utils.book_append_sheet(workbook, newWorksheet, `${storeName} Price History`);
+      const sheetName = `${storeName} Price History`.substring(0, 31);
+
+      XLSX.utils.book_append_sheet(
+        workbook,
+        newWorksheet,
+        sheetName
+      );
     }
 
     XLSX.writeFile(workbook, filePath);
