@@ -2,6 +2,7 @@ const { pipeline } = require('@xenova/transformers');
 
 let sentimentPipeline = null;
 let pipelinePromise = null;
+let pipelinePromise = null;
 
 /**
  * Get or initialize the sentiment analysis pipeline.
