@@ -51,6 +51,10 @@ router.get('/', async (req, res) => {
       return {
         id: product.product_id || String(Math.random()),
         name: product.title || 'Unknown Product',
+        // SerpApi token for the exact product
+        immersiveProductPageToken: product.immersive_product_page_token || null,
+        // Keep this too if needed later
+        serpapiImmersiveProductApi: product.serpapi_immersive_product_api || null,
         price: numPrice.toString(),
         extractedPrice: numPrice,
         oldPrice: oldPrice ? oldPrice.toString() : null,
