@@ -180,7 +180,7 @@ const ProductCard = ({ product, isCheapest, isSaved, onSaveToggle, token, user }
             </svg>
           </a>
           <Link
-            to={`/product/${encodeURIComponent(product.name)}?store=${encodeURIComponent(product.store)}&product_id=${encodeURIComponent(product.id)}&price=${product.extractedPrice}&image=${encodeURIComponent(product.image)}&link=${encodeURIComponent(product.link)}`}
+            to={`/product/${encodeURIComponent(product.name)}?store=${encodeURIComponent(product.store)}&product_id=${encodeURIComponent(product.id)}&price=${product.extractedPrice}&image=${encodeURIComponent(product.image)}&link=${encodeURIComponent(product.link)}&immersive_token=${encodeURIComponent(product.immersiveProductPageToken || '')}`}
             className="w-full py-2 px-3 rounded-xl text-sm font-medium text-center border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all"
           >
             View History
