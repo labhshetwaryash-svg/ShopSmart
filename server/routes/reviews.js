@@ -7,7 +7,7 @@ const { analyzePriceIntegrity, analyzeStoreDisparity, generateAIRecommendation, 
 const router = express.Router();
 
 // Timeout for all SerpAPI requests (10 seconds)
-const SERP_TIMEOUT = 10000;
+const SERP_TIMEOUT = 30000;
 
 router.get('/', async (req, res) => {
   try {
